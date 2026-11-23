@@ -1,7 +1,7 @@
 # SmartTest Mobile
 
 Aplikasi Android & iOS (Flutter) untuk **SmartTest** — CBT & LMS Informatika
-(<https://informatikatsu.my.id>). Tahap 1: **mahasiswa** — ujian CBT yang tahan sinyal putus-nyambung
+(<https://smarttest.informatikatsu.my.id>). Tahap 1: **mahasiswa** — ujian CBT yang tahan sinyal putus-nyambung
 dan LMS (baca materi, lampiran, notifikasi).
 
 Backend-nya adalah repo web [`DzikyR/smartTest`](https://github.com/DzikyR/smartTest) — endpoint
@@ -12,7 +12,7 @@ Backend-nya adalah repo web [`DzikyR/smartTest`](https://github.com/DzikyR/smart
 
 ```bash
 flutter pub get
-flutter run                                              # server produksi (informatikatsu.my.id)
+flutter run                                              # server produksi (smarttest.informatikatsu.my.id)
 flutter run --dart-define=API_BASE=http://10.0.2.2:3000  # server lokal dari emulator Android
 ```
 

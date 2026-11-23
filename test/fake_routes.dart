@@ -82,3 +82,26 @@ FakeReply fakeRoute(RequestOptions req) {
   };
 }
 
+
+/// Server versi pertama (PR #5, sebelum /site): belum ada /site, /me tanpa menu,
+/// /dashboard tanpa statistik & dengan subject berupa teks.
+FakeReply fakeRouteOldServer(RequestOptions req) {
+  final path = req.uri.path.replaceFirst('/api/v1/mobile', '');
+  switch (path) {
+    case '/site':
+      return reply(404, '<html>404</html>');
+    case '/me':
+      final r = fakeRoute(req)!;
+      return reply(200, {'user': (r.body as Map)['user'], 'classes': <Object>[]});
+    case '/dashboard':
+      return reply(200, {
+        'classes': [fakeClass],
+        'exams': [
+          {'id': 'e1', 'title': 'Ujian lama', 'workType': 'QUIZ', 'subject': 'Algoritma', 'startAt': null, 'endAt': null, 'dueAt': null, 'durationMinutes': 30, 'state': 'available', 'mobile': 'ok'},
+        ],
+        'posts': <Object>[],
+      });
+    default:
+      return fakeRoute(req);
+  }
+}

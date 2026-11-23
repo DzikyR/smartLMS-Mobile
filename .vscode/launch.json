@@ -24,8 +24,8 @@
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      // Ganti dengan alamat SmartTest yang sudah memasang API mobile (branch fitur/api-mobile).
-      "args": ["--dart-define=API_BASE=https://informatikatsu.my.id"]
+      // Server SmartTest produksi (bawaan aplikasi bila API_BASE tidak diisi).
+      "args": ["--dart-define=API_BASE=https://smarttest.informatikatsu.my.id"]
     }
   ]
 }

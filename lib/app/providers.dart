@@ -102,7 +102,7 @@ class AuthController extends Notifier<AuthState> {
         state = AuthState(
           AuthStatus.signedIn,
           user: AppUser.fromJson(j['user'] as Map<String, dynamic>),
-          nav: NavSection.listFrom(j['nav']),
+          nav: NavSection.listFrom(j['nav']).isEmpty ? null : NavSection.listFrom(j['nav']),
           features: (j['features'] as List? ?? const []).cast<String>(),
         );
       } else if (e.isNetwork) {
@@ -124,7 +124,7 @@ class AuthController extends Notifier<AuthState> {
         'features': me.features,
       }),
     );
-    state = AuthState(AuthStatus.signedIn, user: u, nav: me.nav, features: me.features);
+    state = AuthState(AuthStatus.signedIn, user: u, nav: me.nav.isEmpty ? null : me.nav, features: me.features);
   }
 
   Future<void> login(String identifier, String password) async {

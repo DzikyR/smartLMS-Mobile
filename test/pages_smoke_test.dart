@@ -94,4 +94,28 @@ void main() {
     cancelScheduledPrefetch();
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('server versi lama (tanpa /site & menu) → tetap tampil dengan bawaan, tanpa error', (tester) async {
+    tester.view.physicalSize = const Size(1170, 7000); // layar tinggi: kartu ujian di bawah ikut terbangun
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final db = LocalDb.memory();
+    final (api, store, _) = await fakeClient(fakeRouteOldServer);
+    await store.saveTokens('akses', 'rt_x');
+    final clock = ServerClock(FakeMono());
+    final services = AppServices(store: store, db: db, api: api, clock: clock, auth: AuthRepository(api, store, db), exams: ExamRepository(api, db, clock), lms: LmsRepository(api, db, Directory.systemTemp), appVersion: '1.0.0');
+    await tester.pumpWidget(ProviderScope(overrides: [servicesProvider.overrideWithValue(services)], child: const SmartLmsApp()));
+    for (var i = 0; i < 15; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.textContaining('Halo, Peserta!'), findsOneWidget);
+    expect(find.text('Ujian lama'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Hasil Ujian'), findsOneWidget, reason: 'menu bawaan');
+    cancelScheduledPrefetch();
+    await tester.pumpWidget(const SizedBox());
+  });
 }

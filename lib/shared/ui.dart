@@ -274,7 +274,10 @@ class ExamCard extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final e = exam;
     final kind = (e['category'] as String?) ?? kindLabels[e['kind']] ?? 'Ujian';
-    final subject = e['subject'] as Map? ?? const {};
+    // Server lama (sebelum /site) mengirim subject sebagai teks nama — tetap didukung.
+    final raw = e['subject'];
+    final subject = raw is Map ? raw : {'name': raw};
+    final subjectLine = [subject['code'], subject['name']].whereType<String>().join(' · ');
     final endAt = e['endAt'] as int?;
     final note = switch (e['mobile']) {
       'not_allowed' => 'Hanya di laptop/PC',
@@ -310,7 +313,7 @@ class ExamCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${subject['code'] ?? ''} · ${subject['name'] ?? ''}',
+                      subjectLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: t.bodySmall?.copyWith(color: p.mutedForeground),

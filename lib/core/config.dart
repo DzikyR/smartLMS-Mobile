@@ -4,7 +4,7 @@
 class AppConfig {
   AppConfig._();
 
-  static const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://informatikatsu.my.id');
+  static const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://smarttest.informatikatsu.my.id');
 
   static String get apiRoot => '$apiBase/api/v1/mobile';
 
