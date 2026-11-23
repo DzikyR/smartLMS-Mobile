@@ -78,4 +78,17 @@ void main() {
     expect(upgrade?['minVersion'], '2.0.0');
     api0.dio.close();
   });
+
+  test('alamat salah (halaman HTML 200) → NOT_API dengan alamat server, bukan "tidak ada koneksi"', () async {
+    final (api, _, _) = await fakeClient((_) => reply(200, '<h1>informatikatsu.my.id</h1><p>Website aktif.</p>'));
+    await expectLater(
+      api.postJson('/auth/login', {'identifier': 'x', 'password': 'y'}, auth: false),
+      throwsA(isA<ApiException>().having((e) => e.code, 'code', 'NOT_API').having((e) => e.message, 'message', contains('http://uji/api/v1/mobile'))),
+    );
+  });
+
+  test('server mati → NETWORK menyebut host yang dituju', () async {
+    final (api, _, _) = await fakeClient((_) => null);
+    await expectLater(api.postJson('/auth/login', {}, auth: false), throwsA(isA<ApiException>().having((e) => e.code, 'code', 'NETWORK').having((e) => e.message, 'message', contains('uji'))));
+  });
 }

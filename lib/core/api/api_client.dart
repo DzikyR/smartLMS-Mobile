@@ -23,7 +23,11 @@ class ApiException implements Exception {
   factory ApiException.fromDio(DioException e) {
     final res = e.response;
     if (res == null) {
-      return ApiException(status: null, code: 'NETWORK', message: 'Tidak ada koneksi ke server. Periksa sinyal/internet Anda.');
+      const network = [DioExceptionType.connectionError, DioExceptionType.connectionTimeout, DioExceptionType.sendTimeout, DioExceptionType.receiveTimeout];
+      if (!network.contains(e.type)) {
+        return ApiException(status: null, code: 'BAD_RESPONSE', message: 'Respons server tidak dapat dibaca (${e.error ?? e.type.name}).');
+      }
+      return ApiException(status: null, code: 'NETWORK', message: 'Tidak ada koneksi ke server (${e.requestOptions.uri.host}). Periksa sinyal/internet Anda.');
     }
     final body = res.data;
     if (body is Map && body['error'] is String) {
@@ -168,10 +172,28 @@ class ApiClient {
     final canRetry = retry ?? method == 'GET';
     for (var attempt = 0; ; attempt++) {
       try {
-        return await dio.request<T>(
+        final res = await dio.request<dynamic>(
           path,
           data: data,
           options: Options(method: method, headers: headers, responseType: responseType, extra: {if (!auth) 'noAuth': true}),
+        );
+        // Alamat salah (mis. halaman hosting/placeholder) membalas HTML 200 — bukan "tidak ada koneksi".
+        if (responseType != ResponseType.bytes && res.statusCode != 304 && res.data != null && res.data is! Map) {
+          throw ApiException(
+            status: res.statusCode,
+            code: 'NOT_API',
+            message: 'Alamat server ${dio.options.baseUrl} bukan server SmartTest (atau API aplikasi belum dipasang). Periksa pengaturan API_BASE.',
+          );
+        }
+        return Response<T>(
+          data: res.data as T?,
+          headers: res.headers,
+          requestOptions: res.requestOptions,
+          statusCode: res.statusCode,
+          statusMessage: res.statusMessage,
+          extra: res.extra,
+          redirects: res.redirects,
+          isRedirect: res.isRedirect,
         );
       } on DioException catch (e) {
         if (!canRetry || !_transient(e) || attempt >= retryDelays.length) throw ApiException.fromDio(e);

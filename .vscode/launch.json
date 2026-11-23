@@ -1,0 +1,31 @@
+{
+  // Pilih konfigurasi di VS Code: Run and Debug (Ctrl+Shift+D) → daftar di atas → F5.
+  // API_BASE menentukan server SmartTest yang dipakai aplikasi.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Emulator → server lokal (laptop)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      // 10.0.2.2 = alamat laptop dilihat dari emulator Android. Server: cd smartTest && npx next start -H 0.0.0.0 -p 3123
+      "args": ["--dart-define=API_BASE=http://10.0.2.2:3123"]
+    },
+    {
+      "name": "HP fisik → server lokal (Wi-Fi sama)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      // Ganti dengan IP Wi-Fi laptop (ipconfig → Wi-Fi → IPv4).
+      "args": ["--dart-define=API_BASE=http://192.168.110.45:3123"]
+    },
+    {
+      "name": "Server produksi",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      // Ganti dengan alamat SmartTest yang sudah memasang API mobile (branch fitur/api-mobile).
+      "args": ["--dart-define=API_BASE=https://informatikatsu.my.id"]
+    }
+  ]
+}
