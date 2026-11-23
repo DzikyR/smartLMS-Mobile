@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/providers.dart';
+import '../../app/site.dart';
+import '../../app/theme.dart';
 import '../../core/api/api_client.dart';
+import '../../core/config.dart';
+import '../../shared/ui.dart';
 
+/// Layar masuk — sama dengan /login di web (teks dari Tampilan Situs).
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -36,10 +43,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  void _web(String path) => launchUrl(Uri.parse('${AppConfig.apiBase}$path'), mode: LaunchMode.externalApplication);
+
   @override
   Widget build(BuildContext context) {
+    final site = ref.watch(siteProvider);
     final notice = ref.watch(authProvider).notice;
-    final theme = Theme.of(context);
+    final p = context.palette;
+    final t = Theme.of(context).textTheme;
+    Widget label(String text, {Widget? trailing}) => Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(text, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w500)),
+          ),
+          ?trailing,
+        ],
+      ),
+    );
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -48,46 +70,69 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: AutofillGroup(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Icon(Icons.school_outlined, size: 56, color: theme.colorScheme.primary),
-                  const SizedBox(height: 12),
-                  Text('SmartTest', textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
-                  Text('CBT & LMS Informatika', textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: 32),
-                  if (notice != null && _error == null) ...[
-                    Text(notice, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.tertiary)),
-                    const SizedBox(height: 12),
-                  ],
-                  TextField(
-                    controller: _id,
-                    autofillHints: const [AutofillHints.username],
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: 'Email atau NIM', border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _pw,
-                    obscureText: _hide,
-                    autofillHints: const [AutofillHints.password],
-                    onSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(icon: Icon(_hide ? Icons.visibility : Icons.visibility_off), onPressed: () => setState(() => _hide = !_hide)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Align(alignment: Alignment.centerLeft, child: BrandLogo(size: 40)),
+                    const SizedBox(height: 32),
+                    Text(site.t('login.title'), style: t.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.6)),
+                    const SizedBox(height: 6),
+                    Text(site.t('login.subtitle'), style: t.bodyLarge?.copyWith(color: p.mutedForeground)),
+                    const SizedBox(height: 28),
+                    if (notice != null && _error == null) _Alert(notice, tint: 'sky'),
+                    if (_error != null) _Alert(_error!, tint: 'rose'),
+                    label('Email atau NIM / Username'),
+                    TextField(controller: _id, autofillHints: const [AutofillHints.username], textInputAction: TextInputAction.next, keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 18),
+                    label(
+                      'Password',
+                      trailing: GestureDetector(
+                        onTap: () => _web('/lupa-password'),
+                        child: Text(
+                          'Lupa password?',
+                          style: t.bodyMedium?.copyWith(color: p.primary, fontWeight: FontWeight.w500),
+                        ),
+                      ),
                     ),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+                    TextField(
+                      controller: _pw,
+                      obscureText: _hide,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        suffixIcon: IconButton(icon: Icon(_hide ? LucideIcons.eye : LucideIcons.eyeOff, size: 20), onPressed: () => setState(() => _hide = !_hide)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _busy ? null : _submit,
+                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      child: _busy ? SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2, color: p.onPrimary)) : Text(site.t('login.cta')),
+                    ),
+                    if (site.registrationOpen) ...[
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Text.rich(
+                          TextSpan(
+                            style: t.bodyMedium?.copyWith(color: p.mutedForeground),
+                            children: [
+                              const TextSpan(text: 'Belum punya akun? '),
+                              WidgetSpan(
+                                child: GestureDetector(
+                                  onTap: () => _web('/daftar'),
+                                  child: Text(
+                                    'Daftar',
+                                    style: t.bodyMedium?.copyWith(color: p.primary, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: _busy ? null : _submit,
-                    child: Padding(padding: const EdgeInsets.all(12), child: _busy ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Masuk')),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Lupa password? Gunakan menu "Lupa password" di situs web.', textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
-                ]),
+                ),
               ),
             ),
           ),
@@ -97,14 +142,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-class ChangePasswordPage extends ConsumerStatefulWidget {
-  const ChangePasswordPage({super.key});
-
+class _Alert extends StatelessWidget {
+  const _Alert(this.text, {required this.tint});
+  final String text;
+  final String tint;
   @override
-  ConsumerState<ChangePasswordPage> createState() => _ChangePasswordPageState();
+  Widget build(BuildContext context) {
+    final (bg, fg) = context.palette.tint(tint);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(kRadiusXl)),
+      child: Text(text, style: TextStyle(color: fg)),
+    );
+  }
 }
 
-class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
+/// Ganti password (wajib untuk password sementara; juga dari halaman Profil).
+class ChangePasswordForm extends ConsumerStatefulWidget {
+  const ChangePasswordForm({super.key, this.onDone});
+  final VoidCallback? onDone;
+
+  @override
+  ConsumerState<ChangePasswordForm> createState() => _ChangePasswordFormState();
+}
+
+class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
   final _current = TextEditingController();
   final _next = TextEditingController();
   final _confirm = TextEditingController();
@@ -124,6 +187,10 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     });
     try {
       await ref.read(authProvider.notifier).changePassword(_current.text, _next.text);
+      _current.clear();
+      _next.clear();
+      _confirm.clear();
+      widget.onDone?.call();
     } on ApiException catch (e) {
       setState(() {
         _error = e.message;
@@ -135,21 +202,66 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Ganti password'), actions: [
-          TextButton(onPressed: () => ref.read(authProvider.notifier).logout(), child: const Text('Keluar')),
-        ]),
-        body: ListView(padding: const EdgeInsets.all(24), children: [
-          const Text('Anda memakai password sementara. Buat password baru (minimal 10 karakter, kombinasi huruf dan angka).'),
-          const SizedBox(height: 20),
-          TextField(controller: _current, obscureText: true, decoration: InputDecoration(labelText: 'Password saat ini', errorText: _fields['currentPassword'], border: const OutlineInputBorder())),
-          const SizedBox(height: 12),
-          TextField(controller: _next, obscureText: true, decoration: InputDecoration(labelText: 'Password baru', errorText: _fields['newPassword'], border: const OutlineInputBorder())),
-          const SizedBox(height: 12),
-          TextField(controller: _confirm, obscureText: true, decoration: InputDecoration(labelText: 'Ulangi password baru', errorText: _fields['confirm'], border: const OutlineInputBorder())),
-          if (_error != null && _fields.isEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
-          const SizedBox(height: 20),
-          FilledButton(onPressed: _busy ? null : _submit, child: const Padding(padding: EdgeInsets.all(12), child: Text('Simpan password'))),
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    Widget field(String label, TextEditingController c, String key) => Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(label, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w500)),
+          ),
+          TextField(
+            controller: c,
+            obscureText: true,
+            decoration: InputDecoration(errorText: _fields[key]),
+          ),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        field('Password saat ini', _current, 'currentPassword'),
+        field('Password baru', _next, 'newPassword'),
+        field('Ulangi password baru', _confirm, 'confirm'),
+        Text('Minimal 10 karakter, kombinasi huruf dan angka. Semua perangkat lain akan keluar.', style: t.bodySmall?.copyWith(color: context.palette.mutedForeground)),
+        if (_error != null && _fields.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(_error!, style: TextStyle(color: context.palette.destructive)),
+          ),
+        const SizedBox(height: 16),
+        FilledButton(onPressed: _busy ? null : _submit, child: const Text('Simpan password')),
+      ],
+    );
+  }
+}
+
+/// Layar wajib ganti password sementara.
+class ChangePasswordPage extends ConsumerWidget {
+  const ChangePasswordPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
+    body: SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          Row(
+            children: [
+              const Expanded(child: BrandLogo(size: 36)),
+              TextButton(onPressed: () => ref.read(authProvider.notifier).logout(), child: const Text('Keluar')),
+            ],
+          ),
+          const SizedBox(height: 28),
+          const PageTitle('Ganti password', subtitle: 'Anda memakai password sementara. Buat password baru untuk melanjutkan.'),
+          const SizedBox(height: 16),
+          const AppCard(child: ChangePasswordForm()),
+        ],
+      ),
+    ),
+  );
 }

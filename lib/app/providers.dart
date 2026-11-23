@@ -14,8 +14,15 @@ final examActiveProvider = StateProvider<bool>((ref) => false);
 
 enum AuthStatus { loading, signedOut, signedIn, upgrade, maintenance }
 
+/// Menu bawaan (sama dengan sidebar web untuk Peserta) bila /me belum pernah termuat.
+final defaultNav = [
+  NavSection(null, [(href: '/dashboard', label: 'Dashboard'), (href: '/kelas', label: 'Kelas')]),
+  NavSection('Ujian', [(href: '/ujian', label: 'Ujian Saya'), (href: '/hasil', label: 'Hasil Ujian')]),
+  NavSection('Akun', [(href: '/profil', label: 'Profil & Password')]),
+];
+
 class AuthState {
-  const AuthState(this.status, {this.user, this.notice, this.upgrade});
+  const AuthState(this.status, {this.user, this.notice, this.upgrade, this.nav, this.features = const []});
 
   final AuthStatus status;
   final AppUser? user;
@@ -25,6 +32,11 @@ class AuthState {
 
   /// Info force update dari server: minVersion, storeUrl, message.
   final Map<String, dynamic>? upgrade;
+
+  final List<NavSection>? nav;
+  final List<String> features;
+
+  List<NavSection> get menu => nav ?? defaultNav;
 }
 
 /// "1.2.10" < "1.3.0"? (versi tidak sah dianggap paling lama) — sama dengan versionLess di server.
@@ -81,14 +93,18 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
     try {
-      final me = await s.auth.me();
-      s.db.saveCache(_meCache, '-', jsonEncode(_userJson(me)));
-      state = AuthState(AuthStatus.signedIn, user: me);
+      _signedIn(await s.auth.me());
     } on ApiException catch (e) {
       final cached = s.db.cached(_meCache);
       if (e.isNetwork && cached != null) {
-        // Offline (mis. di tengah ujian): pakai profil terakhir; jawaban tetap tersimpan lokal.
-        state = AuthState(AuthStatus.signedIn, user: AppUser.fromJson(jsonDecode(cached.body) as Map<String, dynamic>));
+        // Offline (mis. di tengah ujian): pakai profil & menu terakhir; jawaban tetap tersimpan lokal.
+        final j = jsonDecode(cached.body) as Map<String, dynamic>;
+        state = AuthState(
+          AuthStatus.signedIn,
+          user: AppUser.fromJson(j['user'] as Map<String, dynamic>),
+          nav: NavSection.listFrom(j['nav']),
+          features: (j['features'] as List? ?? const []).cast<String>(),
+        );
       } else if (e.isNetwork) {
         state = const AuthState(AuthStatus.signedOut, notice: 'Tidak ada koneksi. Sambungkan internet untuk masuk.');
       } else if (state.status != AuthStatus.upgrade) {
@@ -97,20 +113,28 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Map<String, dynamic> _userJson(AppUser u) =>
-      {'id': u.id, 'name': u.name, 'email': u.email, 'username': u.username, 'role': u.role, 'mustChangePassword': u.mustChangePassword};
+  void _signedIn(MeData me) {
+    final u = me.user;
+    _s.db.saveCache(
+      _meCache,
+      '-',
+      jsonEncode({
+        'user': {'id': u.id, 'name': u.name, 'email': u.email, 'username': u.username, 'role': u.role, 'mustChangePassword': u.mustChangePassword},
+        'nav': [for (final s in me.nav) s.toJson()],
+        'features': me.features,
+      }),
+    );
+    state = AuthState(AuthStatus.signedIn, user: u, nav: me.nav, features: me.features);
+  }
 
   Future<void> login(String identifier, String password) async {
-    final user = await _s.auth.login(identifier, password);
-    _s.db.saveCache(_meCache, '-', jsonEncode(_userJson(user)));
-    state = AuthState(AuthStatus.signedIn, user: user);
+    await _s.auth.login(identifier, password);
+    _signedIn(await _s.auth.me());
   }
 
   Future<void> changePassword(String current, String next) async {
     await _s.auth.changePassword(current, next);
-    final me = await _s.auth.me();
-    _s.db.saveCache(_meCache, '-', jsonEncode(_userJson(me)));
-    state = AuthState(AuthStatus.signedIn, user: me);
+    _signedIn(await _s.auth.me());
   }
 
   Future<void> logout() async {

@@ -15,13 +15,38 @@ class AppUser {
   bool get isStudent => role == 'PESERTA';
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        email: j['email'] as String,
-        username: j['username'] as String?,
-        role: j['role'] as String,
-        mustChangePassword: j['mustChangePassword'] == true,
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    email: j['email'] as String,
+    username: j['username'] as String?,
+    role: j['role'] as String,
+    mustChangePassword: j['mustChangePassword'] == true,
+  );
+}
+
+/// Menu navigasi dari server (navFor() web: label Tampilan Situs + Kontrol Fitur).
+class NavSection {
+  NavSection(this.title, this.items);
+  final String? title;
+  final List<({String href, String label})> items;
+
+  static List<NavSection> listFrom(Object? raw) => [
+    for (final s in (raw as List? ?? const [])) NavSection(s['title'] as String?, [for (final i in (s['items'] as List)) (href: i['href'] as String, label: i['label'] as String)]),
+  ];
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'items': [
+      for (final i in items) {'href': i.href, 'label': i.label},
+    ],
+  };
+}
+
+class MeData {
+  MeData(this.user, this.nav, this.features);
+  final AppUser user;
+  final List<NavSection> nav;
+  final List<String> features;
 }
 
 class AuthRepository {
@@ -40,7 +65,10 @@ class AuthRepository {
     return AppUser.fromJson(res['user'] as Map<String, dynamic>);
   }
 
-  Future<AppUser> me() async => AppUser.fromJson((await api.getJson('/me'))['user'] as Map<String, dynamic>);
+  Future<MeData> me() async {
+    final r = await api.getJson('/me');
+    return MeData(AppUser.fromJson(r['user'] as Map<String, dynamic>), NavSection.listFrom(r['nav']), (r['features'] as List? ?? const []).cast<String>());
+  }
 
   /// Semua sesi lain dicabut server; perangkat ini langsung mendapat sesi baru.
   Future<void> changePassword(String current, String next) async {

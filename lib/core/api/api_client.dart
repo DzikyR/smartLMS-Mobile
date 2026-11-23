@@ -55,13 +55,13 @@ class ApiClient {
     this.retryDelays = const [Duration(seconds: 1), Duration(seconds: 3), Duration(seconds: 8)],
   }) {
     BaseOptions options() => BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          sendTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 30),
-          // 304 = pakai cache lokal (ETag), bukan error.
-          validateStatus: (s) => s != null && (s < 300 || s == 304),
-        );
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 30),
+      // 304 = pakai cache lokal (ETag), bukan error.
+      validateStatus: (s) => s != null && (s < 300 || s == 304),
+    );
     dio = Dio(options());
     _bare = Dio(options());
     if (adapter != null) {
@@ -69,10 +69,14 @@ class ApiClient {
       _bare.httpClientAdapter = adapter;
     }
     dio.interceptors.add(InterceptorsWrapper(onRequest: _onRequest, onError: _onError));
-    _bare.interceptors.add(InterceptorsWrapper(onRequest: (o, h) async {
-      o.headers.addAll(await _deviceHeaders());
-      h.next(o);
-    }));
+    _bare.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (o, h) async {
+          o.headers.addAll(await _deviceHeaders());
+          h.next(o);
+        },
+      ),
+    );
   }
 
   final SecureStore store;
@@ -87,11 +91,7 @@ class ApiClient {
   Future<bool>? _refreshing;
   final _random = Random();
 
-  Future<Map<String, String>> _deviceHeaders() async => {
-        'X-Device-Id': await store.deviceId(),
-        'X-Platform': platform,
-        'X-App-Version': appVersion,
-      };
+  Future<Map<String, String>> _deviceHeaders() async => {'X-Device-Id': await store.deviceId(), 'X-Platform': platform, 'X-App-Version': appVersion};
 
   Future<void> _onRequest(RequestOptions o, RequestInterceptorHandler h) async {
     o.headers.addAll(await _deviceHeaders());
@@ -164,20 +164,15 @@ class ApiClient {
 
   /// Kirim permintaan. [retry] hanya untuk permintaan yang aman diulang (GET, simpan delta
   /// bernomor urut, kumpul ujian — semuanya idempotent di server).
-  Future<Response<T>> send<T>(
-    String method,
-    String path, {
-    Object? data,
-    Map<String, String>? headers,
-    bool? retry,
-    ResponseType? responseType,
-    bool auth = true,
-  }) async {
+  Future<Response<T>> send<T>(String method, String path, {Object? data, Map<String, String>? headers, bool? retry, ResponseType? responseType, bool auth = true}) async {
     final canRetry = retry ?? method == 'GET';
-    for (var attempt = 0;; attempt++) {
+    for (var attempt = 0; ; attempt++) {
       try {
-        return await dio.request<T>(path,
-            data: data, options: Options(method: method, headers: headers, responseType: responseType, extra: {if (!auth) 'noAuth': true}));
+        return await dio.request<T>(
+          path,
+          data: data,
+          options: Options(method: method, headers: headers, responseType: responseType, extra: {if (!auth) 'noAuth': true}),
+        );
       } on DioException catch (e) {
         if (!canRetry || !_transient(e) || attempt >= retryDelays.length) throw ApiException.fromDio(e);
         await Future<void>.delayed(_delay(attempt, e));

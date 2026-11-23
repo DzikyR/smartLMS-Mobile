@@ -52,8 +52,7 @@ class LmsRepository {
     final file = File('${cacheDir.path}/lampiran/$attachmentId/$safe');
     final meta = db.cached('file:$attachmentId');
     final exists = await file.exists();
-    final res = await api.send<List<int>>('GET', '/files/$attachmentId',
-        responseType: ResponseType.bytes, headers: {if (exists && meta != null) 'If-None-Match': meta.etag});
+    final res = await api.send<List<int>>('GET', '/files/$attachmentId', responseType: ResponseType.bytes, headers: {if (exists && meta != null) 'If-None-Match': meta.etag});
     if (res.statusCode == 304 && exists) return file;
     await file.parent.create(recursive: true);
     await file.writeAsBytes(res.data!, flush: true);

@@ -28,7 +28,7 @@ void main() {
 
   setUpAll(() {
     store = SecureStore(MemoryKeyValueStore());
-    api = ApiClient(baseUrl: '$live/api/v1/mobile', store: store, platform: 'android', appVersion: '1.0.0');
+    api = ApiClient(baseUrl: '${live.isEmpty ? 'http://localhost' : live}/api/v1/mobile', store: store, platform: 'android', appVersion: '1.0.0');
     db = LocalDb.memory();
     final clock = ServerClock(FakeMono());
     exams = ExamRepository(api, db, clock);

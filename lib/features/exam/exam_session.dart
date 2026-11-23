@@ -17,8 +17,7 @@ enum SyncState { idle, syncing, offline, error }
 /// sinkron delta tiap 60 dtk (15 dtk di 5 menit terakhir) + saat sinyal kembali + saat
 /// aplikasi ke belakang; timer dari jam server; kumpul otomatis saat waktu habis.
 class ExamSession extends ChangeNotifier {
-  ExamSession({required this.data, required this.repo, required this.db, required this.clock, ExamGuard? guard, Stream<List<ConnectivityResult>>? connectivity})
-      : _connectivity = connectivity {
+  ExamSession({required this.data, required this.repo, required this.db, required this.clock, ExamGuard? guard, Stream<List<ConnectivityResult>>? connectivity}) : _connectivity = connectivity {
     _answers = db.answers(data.attemptId);
     _flagged = db.attemptMeta(data.attemptId).flagged.toSet();
     _deadline = data.deadline;
@@ -121,19 +120,21 @@ class ExamSession extends ChangeNotifier {
     if (finished) return;
     final total = db.addLeave(data.attemptId);
     final max = data.maxLeaves;
-    _set(() => notice = max != null
-        ? 'Pelanggaran tercatat ($total dari $max): ${_label(kind)}. Batas tercapai → jawaban dikumpulkan otomatis.'
-        : 'Pelanggaran tercatat: ${_label(kind)}. Pengawas dapat melihatnya.');
+    _set(
+      () => notice = max != null
+          ? 'Pelanggaran tercatat ($total dari $max): ${_label(kind)}. Batas tercapai → jawaban dikumpulkan otomatis.'
+          : 'Pelanggaran tercatat: ${_label(kind)}. Pengawas dapat melihatnya.',
+    );
     sync(); // server yang memutuskan batasnya (sama dengan web)
   }
 
   static String _label(String kind) => switch (kind) {
-        'bg' => 'keluar dari aplikasi',
-        'split' => 'layar terbagi / jendela mengambang',
-        'shot' => 'tangkapan layar',
-        'rec' => 'rekam layar',
-        _ => kind,
-      };
+    'bg' => 'keluar dari aplikasi',
+    'split' => 'layar terbagi / jendela mengambang',
+    'shot' => 'tangkapan layar',
+    'rec' => 'rekam layar',
+    _ => kind,
+  };
 
   Future<void> sync() async {
     if (finished || syncState == SyncState.syncing) return;

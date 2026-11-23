@@ -25,7 +25,12 @@ class UpdatePage extends ConsumerWidget {
       icon: Icons.system_update,
       title: 'Perbarui aplikasi',
       message: '${info['message'] ?? 'Versi aplikasi ini sudah tidak didukung.'}\nVersi minimum: ${info['minVersion'] ?? '-'}',
-      action: url == null ? null : FilledButton(onPressed: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication), child: const Text('Buka toko aplikasi')),
+      action: url == null
+          ? null
+          : FilledButton(
+              onPressed: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+              child: const Text('Buka toko aplikasi'),
+            ),
     );
   }
 }
@@ -35,11 +40,11 @@ class MaintenancePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => _StatusScaffold(
-        icon: Icons.construction,
-        title: 'Sedang perawatan',
-        message: ref.watch(authProvider).notice ?? 'Coba lagi beberapa saat lagi.',
-        action: FilledButton.tonal(onPressed: () => ref.read(authProvider.notifier).retry(), child: const Text('Coba lagi')),
-      );
+    icon: Icons.construction,
+    title: 'Sedang perawatan',
+    message: ref.watch(authProvider).notice ?? 'Coba lagi beberapa saat lagi.',
+    action: FilledButton.tonal(onPressed: () => ref.read(authProvider.notifier).retry(), child: const Text('Coba lagi')),
+  );
 }
 
 class _StatusScaffold extends StatelessWidget {
@@ -51,20 +56,23 @@ class _StatusScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(height: 16),
-                Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                Text(message, textAlign: TextAlign.center),
-                if (action != null) ...[const SizedBox(height: 24), action!],
-              ]),
-            ),
+    body: SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 8),
+              Text(message, textAlign: TextAlign.center),
+              if (action != null) ...[const SizedBox(height: 24), action!],
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }

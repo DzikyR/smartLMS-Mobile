@@ -9,15 +9,7 @@ import 'exam_package.dart';
 
 /// Lembar ujian yang siap dikerjakan.
 class ExamSessionData {
-  ExamSessionData({
-    required this.attemptId,
-    required this.examId,
-    required this.questions,
-    required this.deadline,
-    required this.questionsPerPage,
-    required this.maxLeaves,
-    required this.resumed,
-  });
+  ExamSessionData({required this.attemptId, required this.examId, required this.questions, required this.deadline, required this.questionsPerPage, required this.maxLeaves, required this.resumed});
 
   final String attemptId;
   final String examId;
@@ -79,8 +71,9 @@ class ExamRepository {
   final LocalDb db;
   final ServerClock clock;
 
-  Future<List<Map<String, dynamic>>> list() async {
-    final res = await api.getJson('/exams');
+  /// Ujian peserta; [classId] = hanya yang ditujukan ke kelas itu (tab Ujian & Tugas).
+  Future<List<Map<String, dynamic>>> list({String? classId}) async {
+    final res = await api.getJson(classId == null ? '/exams' : '/exams?classId=${Uri.encodeQueryComponent(classId)}');
     if (res['now'] is int) await clock.sync(res['now'] as int);
     return (res['exams'] as List).cast<Map<String, dynamic>>();
   }
@@ -92,8 +85,7 @@ class ExamRepository {
   Future<void> prefetchPackage(String examId, {String? version}) async {
     final local = db.package(examId);
     if (local != null && local.version == version) return;
-    final res = await api.send<List<int>>('GET', '/exams/$examId/package',
-        responseType: ResponseType.bytes, headers: {if (local != null) 'If-None-Match': '"${local.version}"'});
+    final res = await api.send<List<int>>('GET', '/exams/$examId/package', responseType: ResponseType.bytes, headers: {if (local != null) 'If-None-Match': '"${local.version}"'});
     if (res.statusCode == 304) return;
     final v = res.headers.value('x-package-version');
     if (v == null) throw ApiException(status: res.statusCode, code: 'BAD_PACKAGE', message: 'Paket soal tidak valid.');
@@ -144,16 +136,13 @@ class ExamRepository {
       final seq = meta.seq + 1;
       final sw = Stopwatch()..start();
       try {
-        final res = await api.putJson(
-            '/attempts/$attemptId/answers',
-            {
-              'seq': seq,
-              'answers': dirty.answers,
-              'cleared': dirty.cleared,
-              if (meta.flaggedDirty) 'flagged': meta.flagged,
-              'leaveCount': meta.leaveCount,
-            },
-            retry: true);
+        final res = await api.putJson('/attempts/$attemptId/answers', {
+          'seq': seq,
+          'answers': dirty.answers,
+          'cleared': dirty.cleared,
+          if (meta.flaggedDirty) 'flagged': meta.flagged,
+          'leaveCount': meta.leaveCount,
+        }, retry: true);
         await clock.sync(res['now'] as int, rttMs: sw.elapsedMilliseconds);
         if (res['duplicate'] == true) {
           // Seq ini sudah tercatat oleh permintaan sebelumnya yang responsnya hilang; isinya

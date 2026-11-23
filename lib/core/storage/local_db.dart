@@ -55,8 +55,7 @@ class LocalDb {
     return r.isEmpty ? null : (version: r.first['version'] as String, blob: r.first['blob'] as Uint8List);
   }
 
-  void savePackage(String examId, String version, Uint8List blob) =>
-      _db.execute('INSERT OR REPLACE INTO packages VALUES (?, ?, ?, ?)', [examId, version, blob, _now]);
+  void savePackage(String examId, String version, Uint8List blob) => _db.execute('INSERT OR REPLACE INTO packages VALUES (?, ?, ?, ?)', [examId, version, blob, _now]);
 
   // ---------------------------------------------------------------- percobaan
 
@@ -116,18 +115,17 @@ class LocalDb {
 
   /// Jawaban lokal (yang dihapus tidak ikut).
   Map<String, String> answers(String attemptId) => {
-        for (final r in _db.select('SELECT qid, value FROM answers WHERE attempt_id = ? AND value IS NOT NULL', [attemptId])) r['qid'] as String: r['value'] as String,
-      };
+    for (final r in _db.select('SELECT qid, value FROM answers WHERE attempt_id = ? AND value IS NOT NULL', [attemptId])) r['qid'] as String: r['value'] as String,
+  };
 
   /// [value] null = jawaban dihapus.
   void setAnswer(String attemptId, String qid, String? value) => _db.execute(
-        '''INSERT INTO answers (attempt_id, qid, value, dirty, changed_at) VALUES (?, ?, ?, 1, ?)
+    '''INSERT INTO answers (attempt_id, qid, value, dirty, changed_at) VALUES (?, ?, ?, 1, ?)
            ON CONFLICT(attempt_id, qid) DO UPDATE SET value = excluded.value, dirty = 1, changed_at = excluded.changed_at''',
-        [attemptId, qid, value, _now],
-      );
+    [attemptId, qid, value, _now],
+  );
 
-  void setFlagged(String attemptId, List<String> flagged) =>
-      _db.execute('UPDATE attempts SET flagged = ?, flagged_dirty = 1 WHERE attempt_id = ?', [jsonEncode(flagged), attemptId]);
+  void setFlagged(String attemptId, List<String> flagged) => _db.execute('UPDATE attempts SET flagged = ?, flagged_dirty = 1 WHERE attempt_id = ?', [jsonEncode(flagged), attemptId]);
 
   /// Pelanggaran (keluar aplikasi / split-screen) — hanya bertambah.
   int addLeave(String attemptId) {
@@ -162,12 +160,11 @@ class LocalDb {
 
   // ---------------------------------------------------------------- outbox kumpul
 
-  void queueSubmit(String attemptId, Map<String, dynamic> payload) =>
-      _db.execute('INSERT OR REPLACE INTO submits VALUES (?, ?, ?)', [attemptId, jsonEncode(payload), _now]);
+  void queueSubmit(String attemptId, Map<String, dynamic> payload) => _db.execute('INSERT OR REPLACE INTO submits VALUES (?, ?, ?)', [attemptId, jsonEncode(payload), _now]);
 
   Map<String, Map<String, dynamic>> pendingSubmits() => {
-        for (final r in _db.select('SELECT attempt_id, payload FROM submits')) r['attempt_id'] as String: jsonDecode(r['payload'] as String) as Map<String, dynamic>,
-      };
+    for (final r in _db.select('SELECT attempt_id, payload FROM submits')) r['attempt_id'] as String: jsonDecode(r['payload'] as String) as Map<String, dynamic>,
+  };
 
   /// Percobaan selesai: hapus jawaban & antrean lokalnya (paket soal tetap untuk ujian berikutnya bila diperlukan).
   void finishAttempt(String attemptId) {

@@ -4,4 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- HANYA build debug: izinkan HTTP ke server SmartTest lokal (mis. http://192.168.x.x:3123).
+         Build rilis tetap wajib HTTPS (manifest utama tidak mengizinkan cleartext). -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

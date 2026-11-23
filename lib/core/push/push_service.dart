@@ -12,8 +12,8 @@ String? routeForNotification(Map<String, dynamic> data) {
   final type = data['type'];
   final materialId = data['materialId'];
   final examId = data['examId'];
-  if ((type == 'TUGAS_KUIS') && examId is String) return '/exam/$examId';
-  if (materialId is String) return '/material/$materialId';
+  if ((type == 'TUGAS_KUIS') && examId is String) return '/ujian/$examId';
+  if (materialId is String) return '/materi/$materialId';
   return null;
 }
 
@@ -57,9 +57,9 @@ class PushService {
       settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher'), iOS: DarwinInitializationSettings()),
       onDidReceiveNotificationResponse: (r) => _open(jsonDecode(r.payload ?? '{}') as Map<String, dynamic>),
     );
-    await _local
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel('kelas', 'Kelas', description: 'Materi, tugas, dan kuis baru', importance: Importance.high));
+    await _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(
+      const AndroidNotificationChannel('kelas', 'Kelas', description: 'Materi, tugas, dan kuis baru', importance: Importance.high),
+    );
 
     await register();
     // getToken/onTokenRefresh ditandai deprecated di firebase_messaging 17 (diganti FID via register/onRegistered),
@@ -76,7 +76,9 @@ class PushService {
         id: m.hashCode,
         title: n.title,
         body: n.body,
-        notificationDetails: const NotificationDetails(android: AndroidNotificationDetails('kelas', 'Kelas', importance: Importance.high, priority: Priority.high)),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails('kelas', 'Kelas', importance: Importance.high, priority: Priority.high),
+        ),
         payload: jsonEncode(m.data),
       );
     });

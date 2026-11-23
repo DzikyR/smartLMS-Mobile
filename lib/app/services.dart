@@ -14,16 +14,7 @@ import '../features/lms/lms_repository.dart';
 
 /// Semua layanan aplikasi, dibuat sekali saat start (main.dart) lalu disuntikkan ke Riverpod.
 class AppServices {
-  AppServices({
-    required this.store,
-    required this.db,
-    required this.api,
-    required this.clock,
-    required this.auth,
-    required this.exams,
-    required this.lms,
-    required this.appVersion,
-  });
+  AppServices({required this.store, required this.db, required this.api, required this.clock, required this.auth, required this.exams, required this.lms, required this.appVersion});
 
   final SecureStore store;
   final LocalDb db;

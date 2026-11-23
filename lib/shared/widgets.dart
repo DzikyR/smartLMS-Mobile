@@ -25,13 +25,13 @@ class AsyncBody<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<T>(
-        future: future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
-          if (snap.hasError) return ErrorView(message: errorText(snap.error!), onRetry: onRetry);
-          return builder(context, snap.data as T);
-        },
-      );
+    future: future,
+    builder: (context, snap) {
+      if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+      if (snap.hasError) return ErrorView(message: errorText(snap.error!), onRetry: onRetry);
+      return builder(context, snap.data as T);
+    },
+  );
 }
 
 class ErrorView extends StatelessWidget {
@@ -41,27 +41,27 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.cloud_off_outlined, size: 48, color: Theme.of(context).colorScheme.outline),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            if (onRetry != null) ...[const SizedBox(height: 16), FilledButton.tonal(onPressed: onRetry, child: const Text('Coba lagi'))],
-          ]),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 48, color: Theme.of(context).colorScheme.outline),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          if (onRetry != null) ...[const SizedBox(height: 16), FilledButton.tonal(onPressed: onRetry, child: const Text('Coba lagi'))],
+        ],
+      ),
+    ),
+  );
 }
 
 /// Pita "data offline" saat menampilkan cache.
 class StaleBanner extends StatelessWidget {
   const StaleBanner({super.key});
   @override
-  Widget build(BuildContext context) => MaterialBanner(
-        content: const Text('Offline — menampilkan data terakhir yang tersimpan.'),
-        leading: const Icon(Icons.wifi_off),
-        actions: const [SizedBox.shrink()],
-      );
+  Widget build(BuildContext context) =>
+      MaterialBanner(content: const Text('Offline — menampilkan data terakhir yang tersimpan.'), leading: const Icon(Icons.wifi_off), actions: const [SizedBox.shrink()]);
 }
 
 void showSnack(BuildContext context, String message) => ScaffoldMessenger.of(context)
