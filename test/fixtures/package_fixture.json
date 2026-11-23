@@ -1,0 +1,37 @@
+{
+  "version": "15390cb40da79adbc6b53885",
+  "key": "Oo+PLk5yR1wkHWkhDBu0wxKc3NbNypxL0bbt3N170xU=",
+  "blob": "eeYO7NTGsq9Rvle9EA5Q0tM0TACwzO/yxm2GdkMyQubgxLhe6ddjeKEv8FLINcIjRgOxFQP7JW34cqfRPEDRTw1Zw3ZFb7GSb+NtYpOoq89cN1bAVyw/HA/o7AtOvCZWB4plx8a1OwN1pNTv3lOwlVznVng+MVRU5BIWNkYixoWKVdgFO6dApR0IQtODujdx97s3ZeWU9Fipo6UpF8/Vik8W34I7gwVi//fZN0B80DlwgHSjnauEe5XBlF12Gy68yP+a5tMoDAJ+ff6mQcdLqf3v70CeW6/78OTy7x816sz+bbBab+DxK4KBC823SidHr/y4uz/+q7fMI2gb4uSQMGlCpHLUf6zomweIXfzoUZi+r5w8d/ylMg9sysbt0F6m2Tj+QbytQ9iK78meAm3zIKD8uQgA8JWp07TurA==",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "MULTIPLE_CHOICE",
+      "prompt": "Struktur data LIFO adalah …",
+      "options": [
+        {
+          "id": "a",
+          "text": "Queue"
+        },
+        {
+          "id": "b",
+          "text": "Stack"
+        }
+      ],
+      "points": 2
+    },
+    {
+      "id": "q2",
+      "type": "TRUE_FALSE",
+      "prompt": "Queue bersifat FIFO. ✓ ünïcödé",
+      "options": null,
+      "points": 1
+    },
+    {
+      "id": "q3",
+      "type": "ESSAY",
+      "prompt": "Jelaskan rekursi!",
+      "options": null,
+      "points": 5
+    }
+  ]
+}
