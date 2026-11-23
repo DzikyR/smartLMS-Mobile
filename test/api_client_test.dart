@@ -91,4 +91,12 @@ void main() {
     final (api, _, _) = await fakeClient((_) => null);
     await expectLater(api.postJson('/auth/login', {}, auth: false), throwsA(isA<ApiException>().having((e) => e.code, 'code', 'NETWORK').having((e) => e.message, 'message', contains('uji'))));
   });
+
+  test('304 (ETag tidak berubah) & body kosong → data null, bukan error tipe', () async {
+    final (api, _, _) = await fakeClient((req) => req.path == '/kosong' ? reply(200) : reply(304));
+    final res = await api.send<Map<String, dynamic>>('GET', '/dashboard', headers: {'If-None-Match': 'W/"x"'});
+    expect(res.statusCode, 304);
+    expect(res.data, isNull);
+    expect((await api.send<Map<String, dynamic>>('GET', '/kosong')).data, isNull);
+  });
 }

@@ -178,15 +178,17 @@ class ApiClient {
           options: Options(method: method, headers: headers, responseType: responseType, extra: {if (!auth) 'noAuth': true}),
         );
         // Alamat salah (mis. halaman hosting/placeholder) membalas HTML 200 — bukan "tidak ada koneksi".
-        if (responseType != ResponseType.bytes && res.statusCode != 304 && res.data != null && res.data is! Map) {
+        if (responseType != ResponseType.bytes && res.statusCode != 304 && res.data is String && (res.data as String).isNotEmpty) {
           throw ApiException(
             status: res.statusCode,
             code: 'NOT_API',
             message: 'Alamat server ${dio.options.baseUrl} bukan server SmartTest (atau API aplikasi belum dipasang). Periksa pengaturan API_BASE.',
           );
         }
+        // 304 (pakai cache ETag) & body kosong tidak membawa data.
+        final body = res.statusCode == 304 || (res.data is String && (res.data as String).isEmpty) ? null : res.data;
         return Response<T>(
-          data: res.data as T?,
+          data: body as T?,
           headers: res.headers,
           requestOptions: res.requestOptions,
           statusCode: res.statusCode,
